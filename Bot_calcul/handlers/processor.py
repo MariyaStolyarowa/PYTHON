@@ -7,7 +7,6 @@ import re
 value = ''
 old_value = ''
 list = []
-list_oper = []
 list_elemens = []
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
@@ -24,98 +23,131 @@ async def callback_func(query: types.CallbackQuery):
     global value, old_value, list, list_oper,list_elemens
     
     data = query.data
-    if data == 'no':
-        pass
-    elif data == 'C':
+      
+    if data == 'C':
         value = '0'
+    
     elif data == '+':
-        list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
-        # list_elemens = re.split(r"[-|+|*|/]+", value)
-        # print(list)
-        value += f' {data} '
-        # list_oper.append('+')
-        # print(list_oper)
-        # list_elemens.append('+')
-        # print(list_elemens)
-        # print(value)
+        if '=' in value:# для контроля ввода знака действия после '='
+            value = data
+        elif value == '0':
+            value = data
+        else:
+            list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
+            list_elemens = value.split() # для контроля лишнего знака действия
+            if list_elemens[-1] in "+-*/":
+                await query.answer()
+            else:
+                value += f' {data} '
+        
     elif data == '-':
-        list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
-        # list_elemens = re.split(r"[-|+|*|/]+", value)
-        # print(list)
-        value += f' {data} '
-        # list_oper.append('-')
-        # print(list_oper)
-        # list_elemens.append('-')
-        # print(list_elemens)
-        # print(value)
+        if '=' in value: # для контроля ввода знака действия после '='
+            value = data
+        elif value == '0':
+            value = data
+        else:
+            list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
+            list_elemens = value.split() # для контроля лишнего знака действия
+            if list_elemens[-1] in "+-*/":
+                await query.answer()
+            else:
+                value += f' {data} '
+        
     elif data == '*':
-        list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
-        # list_elemens = re.split(r"[-|+|*|/]+", value)
-        # print(list)
-        value += f' {data} '
-        # list_oper.append('*')
-        # print(list_oper)
-        # list_elemens.append('*')
+        if '=' in value:# для контроля ввода знака действия после '='
+            await query.answer()
+        elif value == '0':
+            await query.answer()
+        else:
+            list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
+            list_elemens = value.split() # для контроля лишнего знака действия
+            if list_elemens[-1] in "+-*/":
+                await query.answer()
+            else:
+                value += f' {data} '
+        
     elif data == '/':
-        list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
-        # list_elemens = re.split(r"[-|+|*|/]+", value)
-        # print(list)
-        value += f' {data} '
-        # list_oper.append('/')
-        # print(list_oper)
-        # list_elemens.append('/')
+        if '=' in value: # для контроля ввода знака действия после '='
+            await query.answer()
+        elif value == '0':
+            await query.answer()
+        else:
+            list = re.split(r"[-|+|*|/]+", value) # для контроля лишней точки
+            list_elemens = value.split() # для контроля лишнего знака действия
+            if list_elemens[-1] in "+-*/":
+                await query.answer()
+            else:
+                value += f' {data} '
+        
         
     elif data == '<':
         value = value[:-1] if len(value) != 1 else '0'
     elif data == '.': 
         list = re.split(r"[-|+|*|/]+", value)
-        # print(list)
-        if list[-1].count('.') != 0: # если в последнем элементе списка есть '.', то вторую не даст поставить
+        if list[-1].count('.') != 0: # если в последнем числе есть '.', то вторую не даст поставить
             pass
         else:
             value += data
            
     elif data == '=':
-        list_elemens = value.split()
-        print(list_elemens)
-        actions = {
-	    "*": lambda x, y: str(float(x) * float(y)),
-	    "/": lambda x, y: str(float(x) / float(y)),
-	    "+": lambda x, y: str(float(x) + float(y)),
-	    "-": lambda x, y: str(float(x) - float(y))}
-        
-        # list = re.split(r"[-|+|*|/]+", value) 
-        # list_elemens = re.split(r"[-|+|*|/]+", value)
-        # print(list_elemens)
-        
-        list_oper_ind = [i for i,e in enumerate(list_elemens) if e in '*/']
-        while list_oper_ind:
-            ind_op = list_oper_ind[0]
-            a, b, c = list_elemens[ind_op-1:ind_op+2]
-            list_elemens[ind_op-1:ind_op+2] = [actions[b](a,c)]
-            print(list_elemens[ind_op-1:ind_op+2])
+        if '=' in value: # Обработка повторного нажатия "="
+            await query.answer()
+        else:
+            old_value = value
+            list_elemens = value.split()
+            print(list_elemens)
+            actions = {
+            "*": lambda x, y: str(float(x) * float(y)),
+            "/": lambda x, y: str(float(x) / float(y)),
+            "+": lambda x, y: str(float(x) + float(y)),
+            "-": lambda x, y: str(float(x) - float(y))}
+            
+            
             list_oper_ind = [i for i,e in enumerate(list_elemens) if e in '*/']
-        print(list_elemens)
-        while len(list_elemens) > 1:
-            a, b, c = list_elemens[:3]
-            list_elemens[:3] = [actions[b](a,c)]
+            while list_oper_ind:
+                ind_op = list_oper_ind[0]
+                a, b, c = list_elemens[ind_op-1:ind_op+2]
+                if b == '/' and c == '0':
+                    value = 'Ошибка! Делить на 0 нельзя!'
+                    await query.message.edit_text("Ошибка! Делить на 0 нельзя!", reply_markup=choice)
 
-        value = list_elemens[0]
+                else:
+                    list_elemens[ind_op-1:ind_op+2] = [actions[b](a,c)]
+                    print(list_elemens[ind_op-1:ind_op+2])
+                    list_oper_ind = [i for i,e in enumerate(list_elemens) if e in '*/']
+                    print(list_elemens)
+            while len(list_elemens) > 1:
+                a, b, c = list_elemens[:3]
+                list_elemens[:3] = [actions[b](a,c)]
+            
+            value = f'{old_value} = {list_elemens[0]}'
+            
+        # value = 'Ошибка! Делить на 0 нельзя!'
 
     else:
-        if value == "0":
+        if '=' in value:
             value = data
+       
+        elif value == '0':
+            value = data
+        
+        elif value == 'Привет!':
+            value = data
+        
         else:
             value += data
-    # await query.message.edit_text(f"{value}", reply_markup=choice)
+    
     if value != old_value:
         if value == " ":
             await query.message.edit_text("0", reply_markup=choice)
-            # await bot.edit_message_text(chat_id=query.message.chat.id, massage_id = query.message.message.id, text = "0", reply_markup=choice)
+            
         else:
             await query.message.edit_text(f"{value}", reply_markup=choice)
-            # await bot.edit_message_text(chat_id=query.message.chat.id, massage_id = query.message.message.id, text = value, reply_markup=choice)
-    old_value = value
+            
+    # old_value = value
+    # if value == 'Ошибка! Делить на 0 нельзя!':
+    #     value = '0'
 
 
-    # await query.message.edit_text(f"{query.data}", reply_markup=choice)
+
+    
