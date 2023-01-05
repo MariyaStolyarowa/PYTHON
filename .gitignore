@@ -6,4 +6,4 @@ virt/
 __pycache__/
 *.pyc
 
-../Bot_calc/
+Bot_calc/
