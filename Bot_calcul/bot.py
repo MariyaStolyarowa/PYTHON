@@ -2,11 +2,13 @@ from aiogram.utils import executor
 from config import TOKEN
 from create_bot import dp, bot
 from handlers import processor
+from logger import logging
 
 
 
 async def on_startup(_):
     print("Бот онлайн")
+    logging.info('Start')
 
 
 
